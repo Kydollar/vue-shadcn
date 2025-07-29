@@ -1,46 +1,39 @@
 <script lang="ts" setup>
-import type { BasicColorSchema } from '@vueuse/core'
-import type { Component } from 'vue'
-
 import { useColorMode } from '@vueuse/core'
-import { Moon, Sun, SunMoon } from 'lucide-vue-next'
 
-const mode = useColorMode()
+import { colorModeOptions } from '@/constants/color-mode-options'
 
-const colorModes: {
-  colorMode: BasicColorSchema
-  icon: Component
-}[] = [
-  { colorMode: 'light', icon: Sun },
-  { colorMode: 'dark', icon: Moon },
-  { colorMode: 'auto', icon: SunMoon },
-]
+const mode = useColorMode({
+  emitAuto: true,
+})
 
-function setColorMode(colorMode: BasicColorSchema) {
-  mode.value = colorMode
+function setColorMode(value: typeof mode.value) {
+  mode.value = value
 }
 </script>
 
 <template>
   <div class="space-y-1.5 pt-6">
-    <UiLabel for="radius" class="text-xs">
+    <UiLabel class="text-xs">
       Color Mode
     </UiLabel>
+
     <div class="grid grid-cols-3 gap-2 py-1.5">
       <UiButton
-        v-for="item in colorModes" :key="item.colorMode"
+        v-for="option in colorModeOptions"
+        :key="option.value"
         variant="outline"
-        class="justify-center items-center h-8 px-3"
-        :class="item.colorMode === mode ? 'border-foreground border-2' : ''"
-        @click="setColorMode(item.colorMode)"
+        class="h-8 px-3 flex items-center justify-center gap-1.5 text-xs"
+        :class="option.value === mode ? 'border-foreground border-2 !bg-foreground/15 !text-foreground' : ''"
+        @click="setColorMode(option.value)"
       >
-        <component :is="item.icon" />
-        <span class="text-xs">{{ item.colorMode }}</span>
+        <component :is="option.icon" class="w-4 h-4" />
+        {{ option.label }}
       </UiButton>
     </div>
   </div>
 </template>
 
 <style scoped>
-
+/* Pastikan bahwa kelas-kelas yang digunakan dalam template didefinisikan dengan benar */
 </style>

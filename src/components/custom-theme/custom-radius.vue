@@ -6,10 +6,6 @@ import { RADIUS, useThemeStore } from '@/stores/theme'
 const themeStore = useThemeStore()
 const { setRadius } = themeStore
 const { radius } = storeToRefs(themeStore)
-
-watchEffect(() => {
-  document.documentElement.style.setProperty('--radius', `${radius.value}rem`)
-})
 </script>
 
 <template>
@@ -22,7 +18,11 @@ watchEffect(() => {
         v-for="rayon in RADIUS" :key="rayon"
         variant="outline"
         class="justify-center h-8 px-3"
-        :class="rayon === radius ? 'border-foreground border-2' : ''"
+        :class="[
+          rayon === radius
+            ? 'border-foreground border-2 !bg-foreground/15 !text-foreground'
+            : 'border-transparent',
+        ]"
         @click="setRadius(rayon)"
       >
         <span class="text-xs">{{ rayon }}</span>
