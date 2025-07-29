@@ -1,0 +1,66 @@
+import tailwindcss from '@tailwindcss/vite'
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import { fileURLToPath, URL } from 'node:url'
+import { visualizer } from 'rollup-plugin-visualizer'
+import AutoImport from 'unplugin-auto-import/vite'
+import Component from 'unplugin-vue-components/vite'
+import { VueRouterAutoImports } from 'unplugin-vue-router'
+import VueRouter from 'unplugin-vue-router/vite'
+import { defineConfig } from 'vite'
+import vueDevTools from 'vite-plugin-vue-devtools'
+import Layouts from 'vite-plugin-vue-layouts'
+
+const RouteGenerateExclude = ['**/components/**', '**/layouts/**', '**/data/**', '**/types/**']
+
+export default defineConfig({
+  plugins: [
+    VueRouter({
+      exclude: RouteGenerateExclude,
+      dts: 'src/types/typed-router.d.ts', // Output file untuk tipe TypeScript dari route
+    }),
+    vue(),
+    vueJsx(),
+    vueDevTools(),
+    tailwindcss(),
+    visualizer({ gzipSize: true, brotliSize: true }),
+    Layouts({
+      defaultLayout: 'default',
+    }),
+    AutoImport({
+      include: [
+        /\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
+        /\.vue$/,
+        /\.md$/, // .md
+      ],
+      imports: [
+        'vue',
+        VueRouterAutoImports,
+      ], // Auto-import API dari plugin Vue Router, vue,vue-router api
+      dirs: [
+        'src/composables/**/*.ts',
+        'src/enum/**/*.ts',
+        'src/store/**/*.ts',
+      ], // Secara otomatis memuat file dari konfigurasi
+      defaultExportByFilename: true, // Menyertakan nama folder untuk menghindari konflik nama
+      dts: 'src/types/auto-import.d.ts', // File petunjuk tipe (type hint / type definition)
+    }),
+    Component({
+      dirs: [
+        'src/components',
+      ],
+      collapseSamePrefixes: true,
+      directoryAsNamespace: true, // Menyertakan nama folder untuk menghindari konflik nama
+      dts: 'src/types/auto-import-components.d.ts', // File petunjuk tipe (type hint / type definition)
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  esbuild: {
+    drop: ['debugger'],
+    pure: ['console.log'],
+  },
+})
