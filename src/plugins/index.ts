@@ -6,8 +6,10 @@ import { setupI18n } from './i18n'
 import { setupNProgress } from './nprogress'
 import { setupPinia } from './pinia'
 import { setupTanstackVueQuery } from './tanstack-vue-query'
+import { setupTheme } from './theme'
 
 export function setupPlugins(app: App) {
+  setupTheme()
   setupDayjs()
   setupNProgress()
   setupAutoAnimate(app)
