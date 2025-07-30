@@ -10,7 +10,7 @@ import {
 } from 'lucide-vue-next'
 
 import { useSidebar } from '@/components/ui/sidebar'
-import { useLogoutMutation } from '@/composables/auth/useLogoutMutation'
+import { useLogoutMutation } from '@/modules/auth'
 
 import type { User } from './types'
 

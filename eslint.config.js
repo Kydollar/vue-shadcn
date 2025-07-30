@@ -8,6 +8,7 @@ export default antfu({
     '**/build/**',
     '**/lib/**',
     '**/components/ui/**',
+    '**/*.md', // Ignore all Markdown files
   ],
   settings: {
     'import/core-modules': ['vue-router/auto-routes'],

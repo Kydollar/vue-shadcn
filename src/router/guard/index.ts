@@ -3,7 +3,7 @@ import type { Router } from 'vue-router'
 
 import nprogress from 'nprogress'
 
-import { authGuard } from './auth-guard'
+// import { authGuard, permissionGuard, sessionGuard } from '@/modules/auth'
 
 /**
  * global router guard
@@ -22,5 +22,9 @@ function setupCommonGuard(router: Router) {
 
 export function createRouterGuard(router: Router) {
   setupCommonGuard(router)
-  authGuard(router)
+
+  // // Setup auth guards
+  // authGuard(router)
+  // permissionGuard(router)
+  // sessionGuard(router)
 }

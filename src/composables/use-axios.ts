@@ -3,7 +3,7 @@ import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axio
 
 import axios from 'axios'
 
-import { useAuthStore } from '@/stores/auth' // Import useAuthStore here
+import { useAuthStore } from '@/modules/auth' // Updated import
 import env from '@/utils/env'
 
 export function useAxios() {

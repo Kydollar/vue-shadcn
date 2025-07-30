@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useLoginMutation } from '@/composables/auth/useLoginMutation'
+import { useLoginMutation } from '@/modules/auth'
 
 // Assuming these are specific login-related components
 import GitHubButton from './github-button.vue'
