@@ -4,7 +4,7 @@
 
 Admin Dashboard UI crafted with Shadcn-vue, Vue3 and Vite. Built with responsiveness and accessibility in mind.
 
-![cover](public/shadcn-vue-admin.png)
+![cover](public/vue-shadcn-stack.png)
 
 ## Features
 - [x] Light/Dark Mode
