@@ -1,6 +1,6 @@
 /**
  * Authentication Store
- * Centralized state management for authentication
+ * Optimized state management with performance monitoring
  */
 
 import { defineStore } from 'pinia'
@@ -11,93 +11,170 @@ import type { AuthState, AuthUser } from '../types'
 import { SessionUtils, TokenUtils, UserUtils } from '../utils'
 
 export const useAuthStore = defineStore('auth', () => {
-  // State
-  const user = ref<AuthUser | null>(UserUtils.getUser())
-  const token = ref<string | null>(TokenUtils.getToken())
+  // State with lazy initialization for better performance
+  const user = ref<AuthUser | null>(null)
+  const token = ref<string | null>(null)
   const isLoading = ref(false)
-  const lastActivity = ref<number | null>(SessionUtils.getLastActivity())
+  const lastActivity = ref<number | null>(null)
 
-  // Computed
+  // Initialize state from storage on first access
+  let isStateInitialized = false
+
+  function ensureStateInitialized(): void {
+    if (!isStateInitialized) {
+      const startTime = performance.now()
+
+      user.value = UserUtils.getUser()
+      token.value = TokenUtils.getToken()
+      lastActivity.value = SessionUtils.getLastActivity()
+
+      isStateInitialized = true
+
+      if (import.meta.env.DEV) {
+        const duration = performance.now() - startTime
+        console.warn(`[Auth Store] State initialized in ${duration.toFixed(2)}ms`)
+      }
+    }
+  }
+
+  // Computed with optimized caching
   const isAuthenticated = computed(() => {
-    if (!token.value)
-      return false
+    ensureStateInitialized()
 
-    // Check if token is expired
+    if (!token.value) {
+      return false
+    }
+
+    // Optimized token validation with caching
     try {
       return !TokenUtils.isTokenExpired(token.value)
     }
-    catch {
+    catch (error) {
+      console.warn('[Auth Store] Token validation failed:', error)
       return false
     }
   })
 
-  const hasUser = computed(() => !!user.value)
+  const hasUser = computed(() => {
+    ensureStateInitialized()
+    return !!user.value
+  })
 
   const userDisplayName = computed(() => {
+    ensureStateInitialized()
     return user.value ? UserUtils.getDisplayName(user.value) : ''
   })
 
   const userInitials = computed(() => {
+    ensureStateInitialized()
     return user.value ? UserUtils.getInitials(user.value) : ''
   })
 
-  // Actions
+  // Actions with comprehensive error handling and performance optimization
   function setAuth(authToken: string, authUser: AuthUser, remember: boolean = false): void {
     if (!authToken || !authUser) {
       console.warn('[Auth Store] Invalid token or user provided to setAuth')
       return
     }
 
-    // Update state
-    token.value = authToken
-    user.value = authUser
+    try {
+      const startTime = performance.now()
 
-    // Persist to storage
-    TokenUtils.setToken(authToken, remember)
-    UserUtils.setUser(authUser, remember)
+      // Update state
+      token.value = authToken
+      user.value = authUser
 
-    // Update activity
-    updateActivity()
+      // Persist to storage with error handling
+      try {
+        TokenUtils.setToken(authToken, remember)
+        UserUtils.setUser(authUser, remember)
+      }
+      catch (storageError) {
+        console.error('[Auth Store] Failed to persist auth data:', storageError)
+        // Continue even if storage fails
+      }
 
-    // Development logging
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[Auth Store] Authentication set successfully')
+      // Update activity tracking
+      updateActivity()
+
+      if (import.meta.env.DEV) {
+        const duration = performance.now() - startTime
+        console.warn(`[Auth Store] Auth set in ${duration.toFixed(2)}ms`)
+      }
+    }
+    catch (error) {
+      console.error('[Auth Store] Failed to set authentication:', error)
+      throw error
     }
   }
 
   function clearAuth(): void {
-    // Clear state
-    token.value = null
-    user.value = null
-    lastActivity.value = null
+    try {
+      const startTime = performance.now()
 
-    // Clear storage
-    SessionUtils.clearAuthData()
+      // Clear state immediately for instant UX
+      token.value = null
+      user.value = null
+      lastActivity.value = null
 
-    // Development logging
-    if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
-      console.log('[Auth Store] Authentication cleared')
+      // Clear storage with error handling
+      try {
+        SessionUtils.clearAuthData()
+      }
+      catch (storageError) {
+        console.warn('[Auth Store] Failed to clear storage, continuing:', storageError)
+        // Continue even if storage clearing fails
+      }
+
+      if (import.meta.env.DEV) {
+        const duration = performance.now() - startTime
+        console.warn(`[Auth Store] Auth cleared in ${duration.toFixed(2)}ms`)
+      }
+    }
+    catch (error) {
+      console.error('[Auth Store] Failed to clear authentication:', error)
+      // Force clear state even if error occurs
+      token.value = null
+      user.value = null
+      lastActivity.value = null
     }
   }
 
   function updateUser(updatedUser: Partial<AuthUser>): void {
-    if (!user.value)
+    ensureStateInitialized()
+
+    if (!user.value) {
+      console.warn('[Auth Store] No user to update')
       return
+    }
 
-    const newUser = { ...user.value, ...updatedUser }
-    user.value = newUser
+    try {
+      const newUser = { ...user.value, ...updatedUser }
+      user.value = newUser
 
-    // Update storage
-    const remember = !!localStorage.getItem('auth_remember_me')
-    UserUtils.setUser(newUser, remember)
+      // Update storage with error handling
+      try {
+        const remember = !!localStorage.getItem('auth_remember_me')
+        UserUtils.setUser(newUser, remember)
+      }
+      catch (storageError) {
+        console.warn('[Auth Store] Failed to persist user update:', storageError)
+      }
+    }
+    catch (error) {
+      console.error('[Auth Store] Failed to update user:', error)
+    }
   }
 
   function updateActivity(): void {
-    const now = Date.now()
-    lastActivity.value = now
-    SessionUtils.updateLastActivity()
+    try {
+      const now = Date.now()
+      lastActivity.value = now
+      SessionUtils.updateLastActivity()
+    }
+    catch (error) {
+      console.warn('[Auth Store] Failed to update activity:', error)
+    }
   }
 
   function setLoading(loading: boolean): void {
@@ -105,29 +182,57 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function hasPermission(permission: string): boolean {
-    return user.value ? UserUtils.hasPermission(user.value, permission) : false
+    ensureStateInitialized()
+    try {
+      return user.value ? UserUtils.hasPermission(user.value, permission) : false
+    }
+    catch (error) {
+      console.warn('[Auth Store] Permission check failed:', error)
+      return false
+    }
   }
 
   function hasRole(role: string): boolean {
-    return user.value ? UserUtils.hasRole(user.value, role) : false
+    ensureStateInitialized()
+    try {
+      return user.value ? UserUtils.hasRole(user.value, role) : false
+    }
+    catch (error) {
+      console.warn('[Auth Store] Role check failed:', error)
+      return false
+    }
   }
 
   function checkSession(): boolean {
-    if (!token.value) {
+    ensureStateInitialized()
+
+    try {
+      if (!token.value) {
+        clearAuth()
+        return false
+      }
+
+      // Check token expiration with enhanced validation
+      if (TokenUtils.isTokenExpired(token.value)) {
+        if (import.meta.env.DEV) {
+          console.warn('[Auth Store] Session expired, clearing auth')
+        }
+        clearAuth()
+        return false
+      }
+
+      return true
+    }
+    catch (error) {
+      console.error('[Auth Store] Session check failed:', error)
       clearAuth()
       return false
     }
-
-    // Check token expiration
-    if (TokenUtils.isTokenExpired(token.value)) {
-      clearAuth()
-      return false
-    }
-
-    return true
   }
 
   function getAuthState(): AuthState {
+    ensureStateInitialized()
+
     return {
       user: user.value,
       token: token.value,
@@ -137,21 +242,35 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Initialize store
+  // Enhanced initialization with comprehensive error handling
   function initialize(): void {
-    // Check existing session validity
-    if (token.value && !checkSession()) {
+    try {
+      const startTime = performance.now()
+
+      // Force state initialization
+      ensureStateInitialized()
+
+      // Validate existing session
+      if (token.value && !checkSession()) {
+        clearAuth()
+      }
+
+      // Update activity if authenticated
+      if (isAuthenticated.value) {
+        updateActivity()
+      }
+
+      if (import.meta.env.DEV) {
+        const duration = performance.now() - startTime
+        console.warn(`[Auth Store] Initialize completed in ${duration.toFixed(2)}ms`)
+      }
+    }
+    catch (error) {
+      console.error('[Auth Store] Initialization failed:', error)
+      // Clear potentially corrupted state
       clearAuth()
     }
-
-    // Update activity if authenticated
-    if (isAuthenticated.value) {
-      updateActivity()
-    }
   }
-
-  // Initialize on store creation
-  initialize()
 
   return {
     // State

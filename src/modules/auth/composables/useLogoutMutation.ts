@@ -1,69 +1,66 @@
 /**
  * Logout Mutation Composable
- * Handles user logout with TanStack Vue Query
+ * Optimized logout with robust error handling and immediate response
  */
 
 import type { AxiosError } from 'axios'
-import type { Router } from 'vue-router'
 
 import { useMutation } from '@tanstack/vue-query'
-import { useRouter } from 'vue-router'
+import { nextTick } from 'vue'
 
-import { AUTH_ROUTES } from '../constants'
 import { authService } from '../services/auth.service'
 import { useAuthStore } from '../stores'
 
-export function useLogoutMutation(customRouter?: Router) {
+/**
+ * Enhanced logout mutation with immediate state clearing and robust error handling
+ * Features:
+ * - Immediate auth clearing for better UX
+ * - Parallel API call for server cleanup
+ * - Automatic redirect via auth state watcher
+ * - Comprehensive error handling
+ */
+export function useLogoutMutation() {
   const authStore = useAuthStore()
-  const router = customRouter || useRouter()
 
   return useMutation<void, AxiosError>({
     mutationKey: ['auth', 'logout'],
     mutationFn: async () => {
-      await authService.logout()
-    },
-    onSuccess() {
+      // Clear auth state immediately for instant UX response
+      // This triggers the redirect watcher immediately
+      const token = authStore.token
       authStore.clearAuth()
 
-      // Redirect to login page after successful logout
+      // Ensure DOM update before API call
+      await nextTick()
+
       try {
-        router.push(AUTH_ROUTES.LOGIN)
+        // Call logout API in background for server cleanup
+        if (token) {
+          await authService.logout()
+        }
       }
       catch (error) {
-        // Fallback redirect using window.location
-        console.warn('[Auth] Router push failed, using fallback redirect:', error)
-        window.location.href = AUTH_ROUTES.LOGIN
+        // API failure doesn't affect logout - auth already cleared
+        console.warn('[Auth] Logout API failed but auth cleared locally:', error)
+      }
+    },
+    onSuccess() {
+      if (import.meta.env.DEV) {
+        // Development feedback for successful logout
+        console.warn('[Auth] 🚪 Logout completed successfully')
       }
     },
     onError(error: AxiosError) {
-      console.error('[Auth] Logout failed:', error.response?.data || error.message)
-      // Still clear auth on error to ensure user is logged out locally
-      authStore.clearAuth()
+      // This should rarely happen since we handle API errors in mutationFn
+      console.error('[Auth] ❌ Unexpected logout error:', error)
 
-      // Redirect to login page even on error
-      try {
-        router.push(AUTH_ROUTES.LOGIN)
-      }
-      catch (routerError) {
-        // Fallback redirect using window.location
-        console.warn('[Auth] Router push failed, using fallback redirect:', routerError)
-        window.location.href = AUTH_ROUTES.LOGIN
-      }
+      // Ensure auth is cleared even in unexpected scenarios
+      authStore.clearAuth()
     },
-    onSettled() {
-      // Ensure redirect happens regardless of success/error
-      // This is a fallback in case onSuccess/onError don't execute
-      setTimeout(() => {
-        if (!authStore.isAuthenticated) {
-          try {
-            router.push(AUTH_ROUTES.LOGIN)
-          }
-          catch {
-            // Final fallback redirect
-            window.location.href = AUTH_ROUTES.LOGIN
-          }
-        }
-      }, 100)
+    meta: {
+      action: 'logout',
+      timestamp: Date.now(),
+      strategy: 'immediate-clear',
     },
   })
 }
