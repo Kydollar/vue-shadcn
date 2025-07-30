@@ -1,3 +1,4 @@
+// src/router/guard/auth-guard.ts
 import type { Router } from 'vue-router'
 
 import { storeToRefs } from 'pinia'

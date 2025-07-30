@@ -10,6 +10,7 @@ import {
 } from 'lucide-vue-next'
 
 import { useSidebar } from '@/components/ui/sidebar'
+import { useLogoutMutation } from '@/composables/auth/useLogoutMutation'
 
 import type { User } from './types'
 
@@ -17,8 +18,14 @@ const { user } = defineProps<
   { user: User }
 >()
 
-const { logout } = useAuth()
 const { isMobile, open } = useSidebar()
+
+const logoutMutation = useLogoutMutation()
+const { isPending } = logoutMutation
+
+function handleLogout() {
+  logoutMutation.mutate() // Call the mutate function to initiate logout
+}
 </script>
 
 <template>
@@ -97,7 +104,10 @@ const { isMobile, open } = useSidebar()
           </UiDropdownMenuGroup>
 
           <UiDropdownMenuSeparator />
-          <UiDropdownMenuItem @click="logout">
+          <UiDropdownMenuItem
+            :disabled="isPending"
+            @click="handleLogout"
+          >
             <LogOut />
             Log out
           </UiDropdownMenuItem>

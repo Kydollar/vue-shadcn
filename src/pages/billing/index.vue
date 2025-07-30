@@ -15,6 +15,10 @@ import BillingPlan from './components/billing-plan/index.vue'
   </Page>
 </template>
 
-<style>
-
+<style scoped>
 </style>
+
+<route lang="yaml">
+  meta:
+    auth: true
+</route>

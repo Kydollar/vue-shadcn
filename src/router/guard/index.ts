@@ -1,3 +1,4 @@
+// src/router/guard/index.ts
 import type { Router } from 'vue-router'
 
 import nprogress from 'nprogress'

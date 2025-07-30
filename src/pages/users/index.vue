@@ -23,3 +23,11 @@ import { users } from './data/users'
     </div>
   </Page>
 </template>
+
+<style scoped>
+</style>
+
+<route lang="yaml">
+  meta:
+    auth: true
+</route>

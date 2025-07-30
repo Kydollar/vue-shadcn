@@ -49,6 +49,10 @@ const activeTab = ref(tabs.value[0].value)
   </Page>
 </template>
 
-<style>
-
+<style scoped>
 </style>
+
+<route lang="yaml">
+  meta:
+    auth: true
+</route>

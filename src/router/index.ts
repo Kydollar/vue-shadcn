@@ -1,3 +1,4 @@
+// src/router/index.ts
 import { setupLayouts } from 'virtual:generated-layouts'
 import { createWebHistory } from 'vue-router'
 import { createRouter } from 'vue-router/auto'

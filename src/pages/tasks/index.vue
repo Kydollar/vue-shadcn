@@ -23,3 +23,11 @@ import tasks from './data/tasks.json'
     </div>
   </Page>
 </template>
+
+<style scoped>
+</style>
+
+<route lang="yaml">
+  meta:
+    auth: true
+</route>
